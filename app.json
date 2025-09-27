@@ -1,0 +1,19 @@
+{
+  "name": "DREADED AUTOVIEW",
+  "description": "A lightweight WhatsApp bot using Node.js and Baileys (MD) that automatically views post on WhatsApp group.",
+  "website": "https://github.com/Frost-bit-star/magna-bot#readme",
+  "repository": "https://github.com/Frost-bit-star/magna-bot.git",
+  "logo": "https://telegra.ph/file/d6dab955fbaa42fce2280.jpg",
+  "success_url": "/",
+  "env": {
+    "SESSION": {
+      "description": "Paste the session ID that you received in WhatsApp after linking the bot. It's used for authentication.",
+      "required": true
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
