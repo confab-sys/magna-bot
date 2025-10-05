@@ -1,4 +1,6 @@
- const session = process.env.SESSION || 'paste-session-here';
+require('dotenv').config();
+
+const session = process.env.SESSION;
 
 
 module.exports = {

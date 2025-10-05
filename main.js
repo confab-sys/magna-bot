@@ -1,10 +1,11 @@
+require('dotenv').config();
 const { Octokit } = require("@octokit/rest");
 const fs = require("fs");
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "<your-github-token>";
-const STAR_THRESHOLD = 300;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const STAR_THRESHOLD = process.env.STAR_THRESHOLD || 300;
 const KEYWORDS = ["AI", "chat bot", "web3", "trading", "finance tracking"];
-const RESULTS_PER_KEYWORD = 5;
+const RESULTS_PER_KEYWORD = process.env.RESULTS_PER_KEYWORD || 5;
 const GROUPS_FILE = "groups.json";
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
