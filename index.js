@@ -140,7 +140,24 @@ function smsg(conn, m) {
 
 const { session } = require('./settings');
 const BotScheduler = require('./scheduler');
-const { handleMessage } = require('./main');
+
+// Import main functions with error handling
+let handleMessage;
+try {
+  const mainModule = require('./main');
+  console.log('✅ Main module imported successfully');
+  console.log('Available exports:', Object.keys(mainModule));
+  handleMessage = mainModule.handleMessage;
+  if (typeof handleMessage !== 'function') {
+    console.error('❌ handleMessage is not a function:', typeof handleMessage);
+    handleMessage = null;
+  } else {
+    console.log('✅ handleMessage imported successfully');
+  }
+} catch (error) {
+  console.error('❌ Error importing main module:', error.message);
+  handleMessage = null;
+}
 
 async function initializeSession() {
     const credsPath = path.join(__dirname, 'session', 'creds.json');
@@ -208,7 +225,13 @@ if (mek.key && mek.key.remoteJid === "status@broadcast") {
       if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
       if (mek.key.id.startsWith("BAE5") && mek.key.id.length === 16) return;
       m = smsg(client, mek);
-      handleMessage(client, m, chatUpdate);
+      
+      // Call handleMessage with safety check
+      if (handleMessage && typeof handleMessage === 'function') {
+        handleMessage(client, m, chatUpdate);
+      } else {
+        console.log('⚠️ handleMessage not available, skipping message processing');
+      }
     } catch (err) {
       console.log(err);
     }
