@@ -231,6 +231,8 @@ Edit your \`.env\` file to customize:
   }
 }
 
-module.exports = handleMessage;
-module.exports.postToAllGroups = postToAllGroups;
-module.exports.saveGroups = saveGroups;
+module.exports = {
+  handleMessage,
+  postToAllGroups,
+  saveGroups
+};

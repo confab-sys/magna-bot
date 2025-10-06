@@ -207,7 +207,8 @@ if (mek.key && mek.key.remoteJid === "status@broadcast") {
       if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
       if (mek.key.id.startsWith("BAE5") && mek.key.id.length === 16) return;
       m = smsg(client, mek);
-      require("./main")(client, m, chatUpdate);
+      const { handleMessage } = require("./main");
+      handleMessage(client, m, chatUpdate);
     } catch (err) {
       console.log(err);
     }
