@@ -139,6 +139,7 @@ function smsg(conn, m) {
 
 
 const { session } = require('./settings');
+const BotScheduler = require('./scheduler');
 
 async function initializeSession() {
     const credsPath = path.join(__dirname, 'session', 'creds.json');
@@ -317,6 +318,15 @@ if (mek.key && mek.key.remoteJid === "status@broadcast") {
     } else if (connection === "open") {
 
       console.log(color("Congrats, 💐 You are connected, check your starting message for instructions", "green"));
+      
+      // Initialize and start the scheduler
+      const scheduler = new BotScheduler();
+      scheduler.setClient(client);
+      scheduler.start();
+      
+      // Store scheduler globally for potential manual control
+      global.botScheduler = scheduler;
+      
     await client.groupAcceptInvite("HPik6o5GenqDBCosvXW3oe");
 await client.sendMessage(client.user.id, {
   text: `Hi ${client.user.name},\n\n` +
