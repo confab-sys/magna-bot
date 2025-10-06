@@ -140,6 +140,7 @@ function smsg(conn, m) {
 
 const { session } = require('./settings');
 const BotScheduler = require('./scheduler');
+const { handleMessage } = require('./main');
 
 async function initializeSession() {
     const credsPath = path.join(__dirname, 'session', 'creds.json');
@@ -207,7 +208,6 @@ if (mek.key && mek.key.remoteJid === "status@broadcast") {
       if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
       if (mek.key.id.startsWith("BAE5") && mek.key.id.length === 16) return;
       m = smsg(client, mek);
-      const { handleMessage } = require("./main");
       handleMessage(client, m, chatUpdate);
     } catch (err) {
       console.log(err);
