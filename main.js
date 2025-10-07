@@ -64,9 +64,10 @@ function filterNewRepos(repos) {
 }
 
 // --- GitHub search ---
-async function searchRepos(keyword, searchType = 'popular') {
+async function searchRepos(keyword, searchType = 'popular', customResultsCount = null) {
   try {
     let query, sort, order;
+    const resultsCount = customResultsCount || RESULTS_PER_KEYWORD;
     
     if (searchType === 'new') {
       // Search for recently created repositories
@@ -97,7 +98,7 @@ async function searchRepos(keyword, searchType = 'popular') {
       q: query,
       sort: sort,
       order: order,
-      per_page: RESULTS_PER_KEYWORD,
+      per_page: Math.min(resultsCount, 100), // GitHub API limit is 100
     });
     
     return results.data.items || [];
@@ -297,71 +298,131 @@ async function handleMessage(client, m, chatUpdate) {
     }
     
     // Repository search commands
-    else if (command === '!newrepos') {
+    else if (baseCommand === '!newrepos') {
       if (!isGroup) {
         await client.sendMessage(m.chat, { text: '❌ This command can only be used in groups.' });
         return;
       }
       
-      console.log(`📱 New repos search triggered by ${sender} in group ${m.chat}`);
-      await client.sendMessage(m.chat, { text: '🔍 Searching for new repositories...' });
-      
-      let foundRepos = false;
-      for (let keyword of KEYWORDS) {
-        const newRepos = await searchRepos(keyword, 'new');
-        const filteredRepos = filterNewRepos(newRepos);
+      // Check if a keyword was provided
+      if (args.length > 0) {
+        const customKeyword = args.join(' ');
+        console.log(`📱 New repos search for "${customKeyword}" triggered by ${sender} in group ${m.chat}`);
+        await client.sendMessage(m.chat, { text: `🔍 Searching for new "${customKeyword}" repositories...` });
         
-        if (filteredRepos.length > 0) {
-          const msg = formatMessage(filteredRepos, `New ${keyword}`);
-          await client.sendMessage(m.chat, { text: msg });
+        try {
+          const newRepos = await searchRepos(customKeyword, 'new', 10); // Get top 10
+          const filteredRepos = filterNewRepos(newRepos);
           
-          // Save posted repos
-          for (const repo of filteredRepos) {
-            savePostedRepo(repo);
+          if (filteredRepos.length > 0) {
+            const msg = formatMessage(filteredRepos, `New ${customKeyword}`);
+            await client.sendMessage(m.chat, { text: msg });
+            
+            // Save posted repos
+            for (const repo of filteredRepos) {
+              savePostedRepo(repo);
+            }
+            
+            await client.sendMessage(m.chat, { text: `✅ Found ${filteredRepos.length} new repositories for "${customKeyword}"!` });
+          } else {
+            await client.sendMessage(m.chat, { text: `📭 No new repositories found for "${customKeyword}" that haven't been posted before.` });
           }
-          foundRepos = true;
-          
-          // Add delay between messages
-          await new Promise(resolve => setTimeout(resolve, 2000));
+        } catch (error) {
+          console.error(`Error searching for "${customKeyword}":`, error.message);
+          await client.sendMessage(m.chat, { text: `❌ Error searching for "${customKeyword}" repositories.` });
         }
-      }
-      
-      if (!foundRepos) {
-        await client.sendMessage(m.chat, { text: '📭 No new repositories found that haven\'t been posted before.' });
+      } else {
+        // Original behavior - search all default keywords
+        console.log(`📱 New repos search triggered by ${sender} in group ${m.chat}`);
+        await client.sendMessage(m.chat, { text: '🔍 Searching for new repositories...' });
+        
+        let foundRepos = false;
+        for (let keyword of KEYWORDS) {
+          const newRepos = await searchRepos(keyword, 'new');
+          const filteredRepos = filterNewRepos(newRepos);
+          
+          if (filteredRepos.length > 0) {
+            const msg = formatMessage(filteredRepos, `New ${keyword}`);
+            await client.sendMessage(m.chat, { text: msg });
+            
+            // Save posted repos
+            for (const repo of filteredRepos) {
+              savePostedRepo(repo);
+            }
+            foundRepos = true;
+            
+            // Add delay between messages
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+        
+        if (!foundRepos) {
+          await client.sendMessage(m.chat, { text: '📭 No new repositories found that haven\'t been posted before.' });
+        }
       }
     }
     
-    else if (command === '!trendingrepos') {
+    else if (baseCommand === '!trendingrepos') {
       if (!isGroup) {
         await client.sendMessage(m.chat, { text: '❌ This command can only be used in groups.' });
         return;
       }
       
-      console.log(`📱 Trending repos search triggered by ${sender} in group ${m.chat}`);
-      await client.sendMessage(m.chat, { text: '📈 Searching for trending repositories...' });
-      
-      let foundRepos = false;
-      for (let keyword of KEYWORDS) {
-        const trendingRepos = await searchRepos(keyword, 'trending');
-        const filteredRepos = filterNewRepos(trendingRepos);
+      // Check if a keyword was provided
+      if (args.length > 0) {
+        const customKeyword = args.join(' ');
+        console.log(`📱 Trending repos search for "${customKeyword}" triggered by ${sender} in group ${m.chat}`);
+        await client.sendMessage(m.chat, { text: `📈 Searching for trending "${customKeyword}" repositories...` });
         
-        if (filteredRepos.length > 0) {
-          const msg = formatMessage(filteredRepos, `Trending ${keyword}`);
-          await client.sendMessage(m.chat, { text: msg });
+        try {
+          const trendingRepos = await searchRepos(customKeyword, 'trending', 10); // Get top 10
+          const filteredRepos = filterNewRepos(trendingRepos);
           
-          // Save posted repos
-          for (const repo of filteredRepos) {
-            savePostedRepo(repo);
+          if (filteredRepos.length > 0) {
+            const msg = formatMessage(filteredRepos, `Trending ${customKeyword}`);
+            await client.sendMessage(m.chat, { text: msg });
+            
+            // Save posted repos
+            for (const repo of filteredRepos) {
+              savePostedRepo(repo);
+            }
+            
+            await client.sendMessage(m.chat, { text: `✅ Found ${filteredRepos.length} trending repositories for "${customKeyword}"!` });
+          } else {
+            await client.sendMessage(m.chat, { text: `📭 No trending repositories found for "${customKeyword}" that haven't been posted before.` });
           }
-          foundRepos = true;
-          
-          // Add delay between messages
-          await new Promise(resolve => setTimeout(resolve, 2000));
+        } catch (error) {
+          console.error(`Error searching for trending "${customKeyword}":`, error.message);
+          await client.sendMessage(m.chat, { text: `❌ Error searching for trending "${customKeyword}" repositories.` });
         }
-      }
-      
-      if (!foundRepos) {
-        await client.sendMessage(m.chat, { text: '📭 No trending repositories found that haven\'t been posted before.' });
+      } else {
+        // Original behavior - search all default keywords
+        console.log(`📱 Trending repos search triggered by ${sender} in group ${m.chat}`);
+        await client.sendMessage(m.chat, { text: '📈 Searching for trending repositories...' });
+        
+        let foundRepos = false;
+        for (let keyword of KEYWORDS) {
+          const trendingRepos = await searchRepos(keyword, 'trending');
+          const filteredRepos = filterNewRepos(trendingRepos);
+          
+          if (filteredRepos.length > 0) {
+            const msg = formatMessage(filteredRepos, `Trending ${keyword}`);
+            await client.sendMessage(m.chat, { text: msg });
+            
+            // Save posted repos
+            for (const repo of filteredRepos) {
+              savePostedRepo(repo);
+            }
+            foundRepos = true;
+            
+            // Add delay between messages
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+        
+        if (!foundRepos) {
+          await client.sendMessage(m.chat, { text: '📭 No trending repositories found that haven\'t been posted before.' });
+        }
       }
     }
     
@@ -407,8 +468,8 @@ ${postedRepos.slice(-5).reverse().map(repo =>
 📝 *Posting Commands:*
 • \`!postrepos\` or \`!post\` - Post repos to current group
 • \`!postall\` - Post repos to all groups
-• \`!newrepos\` - Search and post only new repositories
-• \`!trendingrepos\` - Search and post trending repositories
+• \`!newrepos [keyword]\` - Search new repositories (top 10 if keyword provided)
+• \`!trendingrepos [keyword]\` - Search trending repositories (top 10 if keyword provided)
 
 📋 *Group Management:*
 • \`!groups\` - List all available groups
