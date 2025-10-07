@@ -233,7 +233,18 @@ if (mek.key && mek.key.remoteJid === "status@broadcast") {
         console.log('⚠️ handleMessage not available, skipping message processing');
       }
     } catch (err) {
-      console.log(err);
+      console.error('❌ Error in message handler:', err.message);
+      console.error('Stack trace:', err.stack);
+      
+      // Log additional context for debugging
+      if (mek) {
+        console.error('Message context:', {
+          messageId: mek.key?.id,
+          fromMe: mek.key?.fromMe,
+          chat: mek.key?.remoteJid,
+          messageType: mek.message ? Object.keys(mek.message)[0] : 'unknown'
+        });
+      }
     }
   });
 
