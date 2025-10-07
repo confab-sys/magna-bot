@@ -164,11 +164,19 @@ class GroupManager {
 
         case '!selectgroup':
           if (!args[0]) {
-            await client.sendMessage(m.chat, { text: '❌ Please specify a group number. Use `!groups` to see available groups.' });
+            await client.sendMessage(m.chat, { text: '❌ Please specify a group number. Use `!groups` to see available groups.\n\n📝 Example: `!selectgroup 1`' });
             return;
           }
           
-          const groupIndex = parseInt(args[0]) - 1;
+          const groupNumber = parseInt(args[0]);
+          
+          // Check if the input is a valid number
+          if (isNaN(groupNumber) || groupNumber <= 0) {
+            await client.sendMessage(m.chat, { text: '❌ Please provide a valid group number (not group ID).\n\n📝 Example: `!selectgroup 1` (not `!selectgroup 120363...`)\n\nUse `!groups` to see the numbered list.' });
+            return;
+          }
+          
+          const groupIndex = groupNumber - 1;
           const groups = await this.getAllGroups(client);
           
           if (!groups || groups.length === 0) {
@@ -177,7 +185,7 @@ class GroupManager {
           }
           
           if (groupIndex < 0 || groupIndex >= groups.length) {
-            await client.sendMessage(m.chat, { text: '❌ Invalid group number. Use `!groups` to see available groups.' });
+            await client.sendMessage(m.chat, { text: `❌ Invalid group number. Please choose a number between 1 and ${groups.length}.\n\nUse \`!groups\` to see available groups.` });
             return;
           }
           
