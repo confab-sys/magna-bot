@@ -228,7 +228,7 @@ if (mek.key && mek.key.remoteJid === "status@broadcast") {
       
       // Call handleMessage with safety check
       if (handleMessage && typeof handleMessage === 'function') {
-        handleMessage(client, m, chatUpdate);
+        await handleMessage(client, m, chatUpdate);
       } else {
         console.log('⚠️ handleMessage not available, skipping message processing');
       }

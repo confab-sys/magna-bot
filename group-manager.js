@@ -171,12 +171,22 @@ class GroupManager {
           const groupIndex = parseInt(args[0]) - 1;
           const groups = await this.getAllGroups(client);
           
+          if (!groups || groups.length === 0) {
+            await client.sendMessage(m.chat, { text: '❌ No groups available. Please try again later or check bot permissions.' });
+            return;
+          }
+          
           if (groupIndex < 0 || groupIndex >= groups.length) {
             await client.sendMessage(m.chat, { text: '❌ Invalid group number. Use `!groups` to see available groups.' });
             return;
           }
           
           const groupToSelect = groups[groupIndex];
+          if (!groupToSelect || !groupToSelect.id) {
+            await client.sendMessage(m.chat, { text: '❌ Invalid group data. Please try refreshing the groups list with `!groups`.' });
+            return;
+          }
+          
           if (this.addGroupToSelection(groupToSelect.id)) {
             await client.sendMessage(m.chat, { text: `✅ Added *${groupToSelect.name}* to selected groups.` });
           } else {
@@ -193,12 +203,22 @@ class GroupManager {
           const unselectIndex = parseInt(args[0]) - 1;
           const selectedList = this.getSelectedGroups();
           
+          if (!selectedList || selectedList.length === 0) {
+            await client.sendMessage(m.chat, { text: '❌ No groups currently selected. Use `!groups` to select groups first.' });
+            return;
+          }
+          
           if (unselectIndex < 0 || unselectIndex >= selectedList.length) {
             await client.sendMessage(m.chat, { text: '❌ Invalid group number. Use `!selectedgroups` to see selected groups.' });
             return;
           }
           
           const groupToUnselect = selectedList[unselectIndex];
+          if (!groupToUnselect) {
+            await client.sendMessage(m.chat, { text: '❌ Invalid group selection. Please try again.' });
+            return;
+          }
+          
           const details = this.getGroupDetails(groupToUnselect);
           
           if (this.removeGroupFromSelection(groupToUnselect)) {
