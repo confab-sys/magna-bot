@@ -460,6 +460,52 @@ ${postedRepos.slice(-5).reverse().map(repo =>
         await client.sendMessage(m.chat, { text: '❌ Error clearing repository history.' });
       }
     }
+    
+    else if (baseCommand === '!searchrepo') {
+      if (!isGroup) {
+        await client.sendMessage(m.chat, { text: '❌ This command can only be used in groups.' });
+        return;
+      }
+      
+      if (args.length === 0) {
+        await client.sendMessage(m.chat, { text: '❌ Please provide a keyword to search for.\n\nUsage: `!searchrepo <keyword>`\nExample: `!searchrepo machine learning`' });
+        return;
+      }
+      
+      const searchKeyword = args.join(' ');
+      console.log(`📱 Search repo for "${searchKeyword}" triggered by ${sender} in group ${m.chat}`);
+      await client.sendMessage(m.chat, { text: `🔍 Searching for "${searchKeyword}" repositories with 1000+ stars...` });
+      
+      try {
+        // Search for repositories with 1000+ stars
+        const query = `${searchKeyword} in:name,description stars:>=1000`;
+        const results = await octokit.search.repos({
+          q: query,
+          sort: "stars",
+          order: "desc",
+          per_page: 10, // Top 10 results
+        });
+        
+        const repos = results.data.items || [];
+        
+        if (repos.length > 0) {
+          const msg = formatMessage(repos, `${searchKeyword} (1000+ stars)`);
+          await client.sendMessage(m.chat, { text: msg });
+          
+          // Optionally save to tracking (you can remove this if you don't want to track these searches)
+          for (const repo of repos) {
+            savePostedRepo(repo);
+          }
+          
+          await client.sendMessage(m.chat, { text: `✅ Found ${repos.length} repositories for "${searchKeyword}" with 1000+ stars!` });
+        } else {
+          await client.sendMessage(m.chat, { text: `📭 No repositories found for "${searchKeyword}" with 1000+ stars.` });
+        }
+      } catch (error) {
+        console.error(`Error searching for "${searchKeyword}":`, error.message);
+        await client.sendMessage(m.chat, { text: `❌ Error searching for "${searchKeyword}" repositories.` });
+      }
+    }
 
     // Help command
     else if (command === '!help' || command === '!commands') {
@@ -470,6 +516,7 @@ ${postedRepos.slice(-5).reverse().map(repo =>
 • \`!postall\` - Post repos to all groups
 • \`!newrepos [keyword]\` - Search new repositories (top 10 if keyword provided)
 • \`!trendingrepos [keyword]\` - Search trending repositories (top 10 if keyword provided)
+• \`!searchrepo <keyword>\` - Search any keyword, top 10 repos with 1000+ stars
 
 📋 *Group Management:*
 • \`!groups\` - List all available groups
